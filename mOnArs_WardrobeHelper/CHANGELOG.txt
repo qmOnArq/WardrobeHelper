@@ -1,0 +1,104 @@
+== 1.9.2 ==
+ * added Russian support (thanks to tomikus)
+
+== 1.9.1 ==
+ * added German support for dungeon list (thanks to Huschiro)
+ * instance list was changed to scrollable instead of paging
+ * fixed Defaults button in Options
+
+== 1.9 ==
+ * optimizations
+ * fixed SOME issues with Refresh Instance
+ * fix for "Sunken Temple" for "Show current instance"
+ * added options window
+ ** option to disable progress for faster refresh
+ ** option to hide list of instances when opening instance
+
+== 1.8.3 ==
+ * added French support for dungeon list (thanks to Cofibib)
+ * added support for future localization
+ * fixed bug with weirdly displayed bars in dungeon list
+
+== 1.8.2 ==
+ * scrolling in Item Frame is much less annoying
+
+== 1.8.1 ==
+ * hotfix for lua errors
+
+== 1.8 ==
+ * added confirmation to refresh all items
+ * added indicator for currently saved instances
+ * added more reasonable progress indicator
+ * instances with completed transmogs are now shown and marked
+ * fix for "Temple of Ahn'Qiraj" for "Show current instance"
+ * added information about the need to initially load instances
+
+== 1.7 ==
+  * instances are categorized to expansions and raid/dungeon categories (EN only)
+  * fix for 'The Eye' for "Show current instance"
+
+== 1.6 ==
+ * even more dungeon fixes for 'current dungeon'
+ * first ugly implementation of items with no ingame source information (World drop / Vendor / Quest / ...)
+
+== 1.5.3 ==
+ * fix conflicting with WIM
+
+== 1.5.2 ==
+ * Magisters' Terrace fixed (Magister's isn't Magisters' Blizzard)
+
+== 1.5.1 ==
+ * lua errors
+
+== 1.5 ==
+ * added option to close list without closing instance
+ * hopefully less lua errors
+ * boss names should disappear when they don't drop anything anymore
+ * instances with prefixes might be finally working with "Show current instance" (Why can't Blizzard be consistent :c)
+
+== 1.4 ==
+ * moved button in Wardrobe for now
+ * added button to open currently entered instance
+ * auto-opens with currently entered instance
+
+== 1.3 ==
+ * fixed minor issue with instance list
+ * added shift click on items to post in chat
+ * added ctrl click on items to show in dressup frame
+
+== 1.2 ==
+ * added refresh only selected instance button
+ * added button to wardrobe to open
+ * tooltips are less annoying
+
+== 1.1 ==
+ * added count of missing items
+ * improved main frame
+ * new interface for items
+ * added scrollwheel support
+
+== 1.0 ==
+ * initial release
+
+== TODO ==
+ * add illusions
+ * sort bosses by real order
+ * remove duplicate items
+ * adjustable window size
+ * open with difficulty currently set by the player ingame
+ * small window for missing loot while in instance
+ * sort instances by missing stuff
+ * icon for difficulty you are missing most mogs of from
+ * show counts of missing mogs for other classes too
+
+ * remove duplicate difficulties
+ * titan panel support
+ * save data to avoid full refresh after relog
+ * add minimap button
+ * category for tiers
+ * autorefresh instance when appropriate
+ * include items whose appearance has been unlocked by a different item
+
+== BUGS ==
+ * instance doesn't update in list after refreshing just instance
+ * fix HC/Mythic/.. items - not even refresh instance works because of that

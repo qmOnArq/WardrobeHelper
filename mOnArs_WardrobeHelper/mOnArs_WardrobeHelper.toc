@@ -1,0 +1,28 @@
+## Interface:  70000
+## Title: mOnAr's WardrobeHelper
+## Version: 1.9.2
+## Author: Seamoon/mOnAr
+## Notes:
+## SavedVariables: mOnWDSave
+## SavedVariablesPerCharacter:
+
+_GlobalOptions.lua
+Functions.lua
+
+Init.lua
+
+localization\Categorization.en.lua
+localization\Categorization.fr.lua
+localization\Categorization.de.lua
+localization\Categorization.ru.lua
+
+localization\Localization.en.lua
+localization\Localization.ru.lua
+
+Core.lua
+
+gui\GUI_main.lua
+gui\GUI_items.lua
+gui\GUI_options.lua
+
+_InterfaceOptions.lua
