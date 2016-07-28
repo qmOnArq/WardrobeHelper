@@ -1,10 +1,13 @@
 ## Interface:  70000
 ## Title: mOnAr's WardrobeHelper
-## Version: 1.10
+## Version: 1.10.1
 ## Author: Seamoon/mOnAr
 ## Notes:
 ## SavedVariables: mOnWDSave
 ## SavedVariablesPerCharacter:
+
+libs\LibDBIcon-1.0\embeds.xml
+libs\LibDBIcon-1.0\LibDBIcon-1.0\lib.xml
 
 _GlobalOptions.lua
 Functions.lua
@@ -18,6 +21,8 @@ localization\Categorization.ru.lua
 
 localization\Localization.en.lua
 localization\Localization.ru.lua
+
+customCategories\tiers.lua
 
 Core.lua
 

@@ -7,6 +7,7 @@ local o = mOnWardrobe
 o.defaultSettings = {}
 o.defaultSettings.hideList = false
 o.defaultSettings.disableProgress = false
+o.defaultSettings.minimap = {}
 
 ---------------------------------------------------------------
 --  Main Initialization
@@ -31,6 +32,22 @@ end
 o.menuItems = {}
 o.saves = {}
 o.loaded = false
+
+---------------------------------------------------------------
+--  Minimap Button
+---------------------------------------------------------------
+
+o.LDB = LibStub("LibDataBroker-1.1"):NewDataObject("Wardrobe Helper", {
+	type = "data source",
+	text = "Wardrobe Helper",
+	icon = "Interface\\Icons\\INV_Chest_Cloth_17",
+	OnClick = function() o.GUIopen() end,
+	OnTooltipShow = function(tooltip)
+		tooltip:AddLine("Wardrobe Helper")
+	end,
+})
+
+o.LDBI = LibStub("LibDBIcon-1.0")
 
 ---------------------------------------------------------------
 --  Debug Methods
@@ -289,6 +306,7 @@ f:RegisterEvent("ADDON_LOADED")
 function f:OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23)
 	if (event == "ADDON_LOADED") and (arg1 == "mOnArs_WardrobeHelper") then
 		o.fixSettings()
+		o.LDBI:Register("Wardrobe Helper", o.LDB, mOnWDSave.minimap)
 	end
 end
 

@@ -25,3 +25,4 @@ s["Disable Progress"] = "Disable Progress"
 s["Disable Progress Info"] = "Should speedup refresh all items process."
 
 s["Refreshing"] = "Refreshing"
+s["Hide Minimap"] = "Hide Minimap button"

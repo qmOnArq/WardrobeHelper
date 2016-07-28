@@ -1,3 +1,7 @@
+== 1.10.1 ==
+ * added minimap button (and the option to disable it)
+ * added titan panel support
+
 == 1.10 ==
  * the UI should be more responsive during refresh (thanks to yksisarvinen)
  * Sunwell fix
@@ -97,12 +101,12 @@
  * show counts of missing mogs for other classes too
 
  * remove duplicate difficulties
- * titan panel support
  * save data to avoid full refresh after relog
- * add minimap button
  * category for tiers
  * autorefresh instance when appropriate
  * include items whose appearance has been unlocked by a different item
+ * items that can be unlocked but aren't meant for the class aren't shown (DK offhand)
+ * Create a filter, to show only raids, only dungeons, specifics expansions, etc.
 
 == BUGS ==
  * instance doesn't update in list after refreshing just instance

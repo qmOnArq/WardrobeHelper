@@ -14,6 +14,7 @@ o.GUIfixOptions = function()
 	o.GUIshowTabOptions(1)
 	mOnWD_OptionsFrame.hideList:SetChecked(mOnWDSave.hideList)
 	mOnWD_OptionsFrame.disableProgress:SetChecked(mOnWDSave.disableProgress)
+	mOnWD_OptionsFrame.hideMinimap:SetChecked(mOnWDSave.minimap.hide)
 end
 
 o.GUIshowOptions = function()
@@ -202,6 +203,24 @@ fs:SetJustifyH("LEFT");
 fs:SetPoint("TOPLEFT", fr.panel, "TOPLEFT", 30, -80)
 fs:SetText(o.strings["Disable Progress Info"])
 table.insert(fr.tabItems[1], fs)
+
+local n = CreateFrame("CheckButton", "mOnWD_OptionsFrame_DisableMinimapButton", fr.panel.border, "ChatConfigCheckButtonTemplate")
+fr.hideMinimap = n
+table.insert(fr.tabItems[1], n)
+n:SetPoint("TOPLEFT", fr.panel, "TOPLEFT", 10, -95)
+mOnWD_OptionsFrame_DisableMinimapButtonText:SetText(o.strings["Hide Minimap"])
+n:SetScript("OnClick", function()
+		if n:GetChecked() then
+			mOnWDSave.minimap.hide = true
+		else
+			mOnWDSave.minimap.hide = false
+		end
+		if mOnWDSave.minimap.hide then
+			o.LDBI:Hide("Wardrobe Helper")
+		else
+			o.LDBI:Show("Wardrobe Helper")
+		end
+	end);
 
 local fs = fr.panel:CreateFontString("mOnWD_OptionsFrame_Debug_Info","OVERLAY","GameFontNormalSmall");
 fr.disableProgressInfo = fs;
