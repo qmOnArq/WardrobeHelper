@@ -1,6 +1,6 @@
 ## Interface:  70000
 ## Title: mOnAr's WardrobeHelper
-## Version: 1.9.2
+## Version: 1.10
 ## Author: Seamoon/mOnAr
 ## Notes:
 ## SavedVariables: mOnWDSave

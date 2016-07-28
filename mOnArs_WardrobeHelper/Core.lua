@@ -58,92 +58,117 @@ local function isCollected(sources)
 	return false
 end
 
-o.updateMissingVisuals = function()
-	o.instances = {}
-	o.loaded = true
-	for i = 1,30 do
-		local appearances = C_TransmogCollection.GetCategoryAppearances(i)
-		if appearances then
-			for j = 1,#appearances do
-				local collected = appearances[j].isCollected == true
-				if collected and mOnWDSave.disableProgress then
-				else
-					local sources = C_TransmogCollection.GetAppearanceSources(appearances[j].visualID)
-					if sources then
-						collected = collected or isCollected(sources) == true
-						if collected and mOnWDSave.disableProgress then
-						else
-							for m = 1,#sources do
-								local i1, i2, b1, i3, b2, itemString, visualString, sourceType = C_TransmogCollection.GetAppearanceSourceInfo(sources[m].sourceID)
+local function getUpdateHelper()
+	return coroutine.create(function()
+		local newInstances = {}
+		local blockSize = 50 -- number of appearances to load at once. higher values may introduce lag
+		local counter = 0
+		for i = 1,30 do
+			local appearances = C_TransmogCollection.GetCategoryAppearances(i)
+			if appearances then
+				for j = 1,#appearances do
+					local collected = appearances[j].isCollected == true
+					if collected and mOnWDSave.disableProgress then
+					else
+						local sources = C_TransmogCollection.GetAppearanceSources(appearances[j].visualID)
+						if sources then
+							collected = collected or isCollected(sources) == true
+							if collected and mOnWDSave.disableProgress then
+							else
+								for m = 1,#sources do
+									local i1, i2, b1, i3, b2, itemString, visualString, sourceType = C_TransmogCollection.GetAppearanceSourceInfo(sources[m].sourceID)
 
-								-- 1 = Boss Raid Drops
-								if sourceType == 1 then
-									local drops = C_TransmogCollection.GetAppearanceSourceDrops(sources[m].sourceID)
-									for k=1,#drops do
-										local inst = drops[k]
-										if o.instances[inst.instance] == nil then
-											o.instances[inst.instance] = {}
-											o.instances[inst.instance]['#collected'] = 0
-											o.instances[inst.instance]['#total'] = 0
-										end
-										if #inst.difficulties == 0 then
-											inst.difficulties[1] = "Normal"
-										end
-										for l=1,#inst.difficulties do
-											local dif = inst.difficulties[l]
-											if o.instances[inst.instance][dif] == nil then
-												o.instances[inst.instance][dif] = {}
+									-- 1 = Boss Raid Drops
+									if sourceType == 1 then
+										local drops = C_TransmogCollection.GetAppearanceSourceDrops(sources[m].sourceID)
+										for k=1,#drops do
+											local inst = drops[k]
+											if newInstances[inst.instance] == nil then
+												newInstances[inst.instance] = {}
+												newInstances[inst.instance]['#collected'] = 0
+												newInstances[inst.instance]['#total'] = 0
 											end
-											if o.instances[inst.instance][dif][inst.encounter] == nil then
-												o.instances[inst.instance][dif][inst.encounter] = {}
+											if #inst.difficulties == 0 then
+												inst.difficulties[1] = "Normal"
 											end
-											if collected then
-												o.instances[inst.instance]['#collected'] = o.instances[inst.instance]['#collected'] + 1
-											else
-												local item = {}
-												item.link = itemString
-												item.id = string.match(itemString, 'item:([^:]*):')
-												item.visualID = appearances[j].visualID
-												item.sourceID = sources[m].sourceID
-												table.insert(o.instances[inst.instance][dif][inst.encounter], item)
+											for l=1,#inst.difficulties do
+												local dif = inst.difficulties[l]
+												if newInstances[inst.instance][dif] == nil then
+													newInstances[inst.instance][dif] = {}
+												end
+												if newInstances[inst.instance][dif][inst.encounter] == nil then
+													newInstances[inst.instance][dif][inst.encounter] = {}
+												end
+												if collected then
+													newInstances[inst.instance]['#collected'] = newInstances[inst.instance]['#collected'] + 1
+												else
+													local item = {}
+													item.link = itemString
+													item.id = string.match(itemString, 'item:([^:]*):')
+													item.visualID = appearances[j].visualID
+													item.sourceID = sources[m].sourceID
+													table.insert(newInstances[inst.instance][dif][inst.encounter], item)
+												end
+												newInstances[inst.instance]['#total'] = newInstances[inst.instance]['#total'] + 1
 											end
-											o.instances[inst.instance]['#total'] = o.instances[inst.instance]['#total'] + 1
 										end
-									end
-								else
-									local type = TYPES[sourceType]
-									if o.instances[type] == nil then
-										o.instances[type] = {}
-										o.instances[type]['Normal'] = {}
-										o.instances[type]['#collected'] = 0
-										o.instances[type]['#total'] = 0
-									end
-									if o.instances[type]['Normal'][i] == nil then
-										o.instances[type]['Normal'][i] = {}
-									end
-									if collected then
-										o.instances[type]['#collected'] = o.instances[type]['#collected'] + 1
 									else
-										local item = {}
-										item.link = itemString
-										item.id = string.match(itemString, 'item:([^:]*):')
-										item.visualID = appearances[j].visualID
-										item.sourceID = sources[m].sourceID
-										table.insert(o.instances[type]['Normal'][i], item)
+										local type = TYPES[sourceType]
+										if newInstances[type] == nil then
+											newInstances[type] = {}
+											newInstances[type]['Normal'] = {}
+											newInstances[type]['#collected'] = 0
+											newInstances[type]['#total'] = 0
+										end
+										if newInstances[type]['Normal'][i] == nil then
+											newInstances[type]['Normal'][i] = {}
+										end
+										if collected then
+											newInstances[type]['#collected'] = newInstances[type]['#collected'] + 1
+										else
+											local item = {}
+											item.link = itemString
+											item.id = string.match(itemString, 'item:([^:]*):')
+											item.visualID = appearances[j].visualID
+											item.sourceID = sources[m].sourceID
+											table.insert(newInstances[type]['Normal'][i], item)
+										end
+										newInstances[type]['#total'] = newInstances[type]['#total'] + 1
 									end
-									o.instances[type]['#total'] = o.instances[type]['#total'] + 1
 								end
 							end
 						end
 					end
+					counter = counter + 1
+					if counter % blockSize == 0 then
+						o.dotsString = o.dotsString .. "."
+						if o.dotsString == "...." then o.dotsString = "" end
+						coroutine.yield()
+					end
 				end
 			end
 		end
-	end
+		o.instances = newInstances
+		o.loaded = true
 
-	o.createMenuItems()
-	collectgarbage()
-	o.GUImainPage(1)
+		o.updateHelper = nil
+		o.createMenuItems()
+		collectgarbage()
+		o.GUImainPage(1)
+	end)
+end
+
+o.dotsString = ""
+o.updateHelper = nil
+o.updateMissingVisuals = function()
+	if o.updateHelper == nil or coroutine.status(o.updateHelper) == "dead" then
+		o.dotsString = ""
+		o.updateHelper = getUpdateHelper()
+	end
+	local ok, msg = coroutine.resume(o.updateHelper)
+	if not ok then
+		print("Error while refreshing: ", msg)
+	end
 end
 
 o.refreshInstance = function(instance)
@@ -202,9 +227,13 @@ o.createInstanceNames = function(name)
 	elseif name == "Temple of Ahn'Qiraj" then
 		namesToTry[#namesToTry + 1] = "Ahn'Qiraj Temple"
 	elseif name == "Sunken Temple" then
-			namesToTry[#namesToTry + 1] = "The Temple of Atal'hakkar"
+		namesToTry[#namesToTry + 1] = "The Temple of Atal'hakkar"
 	elseif name == "The Temple of Atal'hakkar" then
-			namesToTry[#namesToTry + 1] = "Sunken Temple"
+		namesToTry[#namesToTry + 1] = "Sunken Temple"
+	elseif name == 'The Sunwell' then
+		namesToTry[#namesToTry + 1] = 'Sunwell Plateau'
+	elseif name == 'Sunwell Plateau' then
+		namesToTry[#namesToTry + 1] = 'The Sunwell'
 	end
 
 	local tmp = string.explodePHP(name, ": ")
@@ -276,6 +305,15 @@ function f:OnUpdate(arg1)
 						o.GUIopen()
 					end)
 			end
+		end
+	end
+
+
+	if o.updateHelper and coroutine.status(o.updateHelper) ~= "dead" then
+		mOnWD_MainFrame.ListFrame.info:SetText(o.strings["Refreshing"] .. o.dotsString)
+		local ok, msg = coroutine.resume(o.updateHelper)
+		if not ok then
+			print("Error while refreshing: ", msg)
 		end
 	end
 end
