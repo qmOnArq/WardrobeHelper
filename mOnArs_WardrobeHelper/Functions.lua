@@ -1,3 +1,13 @@
+function cmpAlphabetical(a, b)
+   local patt = '^(.-)%s*(%d+)$'
+   local _,_, col1, num1 = a:find(patt)
+   local _,_, col2, num2 = b:find(patt)
+   if (col1 and col2) and col1 == col2 then
+      return tonumber(num1) < tonumber(num2)
+   end
+   return a < b
+end
+
 function __genOrderedIndex( t )
     local orderedIndex = {}
     for key in pairs(t) do
@@ -41,7 +51,6 @@ function orderedPairs(t)
     -- in order
     return orderedNext, t, nil
 end
-
 
 function string:explodePHP(delimiter)
   local result = { }

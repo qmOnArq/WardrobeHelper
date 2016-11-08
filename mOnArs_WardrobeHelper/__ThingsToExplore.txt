@@ -1,3 +1,9 @@
+TRANSMOG_COLLECTION_UPDATED event
+
+_G["TRANSMOG_SOURCE_"..TRANSMOG_SOURCE_BOSS_DROP]
+
+Interface\Common\ReputationStar-Glow
+
 C_TransmogCollection.CanSetFavoriteInCategory
 C_TransmogCollection.ClearNewAppearance
 C_TransmogCollection.ClearSearch

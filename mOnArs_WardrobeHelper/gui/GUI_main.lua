@@ -25,7 +25,7 @@ f:SetClampedToScreen(true);
 f:RegisterForDrag("LeftButton");
 f:SetScript("OnDragStart", f.StartMoving)
 f:SetScript("OnDragStop", f.StopMovingOrSizing)
-SetPortraitToTexture(mOnWD_MainFramePortrait, "Interface\\FriendsFrame\\FriendsFrameScrollIcon");
+SetPortraitToTexture(mOnWD_MainFramePortrait, "Interface\\Icons\\INV_Chest_Cloth_17");
 
 local f=CreateFrame("FRAME",nil,mOnWD_MainFrame);
 mOnWD_MainFrame.ListFrame = f;
@@ -34,14 +34,21 @@ f:SetWidth(384);
 f:EnableMouse(false);
 f:SetAllPoints(mOnWD_MainFrame);
 
-local b = CreateFrame("BUTTON","mOnWD_MainFrame_bRefresh",f,"UIPanelButtonTemplate");
+local b = CreateFrame("BUTTON","mOnWD_MainFrame_bRefresh",f,"UIPanelButtonTemplate")
 f.bRefresh = b;
 b:SetPoint("TOPRIGHT",-10,-35);
 b:SetText(o.strings["Refresh Items"])
 b:SetHeight(25);
 b:SetWidth(120);
 b:SetScript("OnClick", function()
-	StaticPopup_Show ("MONWD_CONFIRMATION")
+	if mOnWDSave.disableConfirmation then
+		if mOnWD_MainFrame.ItemFrame then
+			mOnWD_MainFrame.ItemFrame:Hide()
+		end
+		o.updateMissingVisuals()
+	else
+		StaticPopup_Show ("MONWD_CONFIRMATION")
+	end
 	end)
 
 local b = CreateFrame("BUTTON","mOnWD_MainFrame_bCurrentInstance",f,"UIPanelButtonTemplate");
@@ -53,16 +60,6 @@ b:SetWidth(120);
 b:SetScript("OnClick", function()
 		o.GUIcurrentInstance()
 	end)
-
-local b = CreateFrame("BUTTON","mOnWD_MainFrame_bOptions",f,"UIPanelButtonTemplate");
-	f.bOptions = b;
-	b:SetPoint("RIGHT", mOnWD_MainFrame_bCurrentInstance, "LEFT", -10, 0);
-	b:SetText(o.strings["Options"])
-	b:SetHeight(25);
-	b:SetWidth(60);
-	b:SetScript("OnClick", function()
-			o.GUIshowOptions()
-		end)
 
 local ff = CreateFrame("FRAME",nil,f);
 ff:Show();
@@ -76,11 +73,22 @@ st:SetHeight(380)
 st:SetWidth(300)
 st:SetJustifyH("CENTER")
 st:SetPoint("TOP", ff, "TOP", 0, -10)
-st:SetText(string.format(o.strings["Click Refresh Info"], o.strings["Refresh Items"]));
+st:SetText(string.format(o.strings["Click Refresh Info"], o.strings["Refresh Items"]))
 st:Hide();
 local filename, fontHeight, flags = st:GetFont()
 st:SetFont(filename, 20, "")
-f.info = st;
+f.info = st
+
+local st = ff:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+st:SetHeight(380)
+st:SetWidth(300)
+st:SetJustifyH("CENTER")
+st:SetPoint("TOP", ff, "TOP", 0, 100)
+st:SetText("");
+st:Hide();
+local filename, fontHeight, flags = st:GetFont()
+st:SetFont(filename, 15, "")
+f.specialMessage = st;
 
 local t = ff:CreateTexture(nil, "BACKGROUND");
 ff.BG = t;
@@ -140,21 +148,60 @@ t:SetTexCoord(0.90625,0.96875,0,0.75);
 t:SetWidth(4);
 t:SetHeight(24);
 
-local fs = f:CreateFontString(nil, "ARTWORK","GameFontNormalSmall");
-f.ColT2 = fs;
-fs:SetText(o.strings["Instance"]);
-fs:SetPoint("LEFT",f.ColL2, 10, 0);
+local fs = f:CreateFontString(nil, "ARTWORK","GameFontNormalSmall")
+f.ColT2 = fs
+fs:SetText(o.strings["Instance"])
+fs:SetPoint("LEFT",f.ColL2, 10, 0)
 
 local function CreateTableRow(parent, rowHeight, N)
   local row = CreateFrame("Button", nil, parent)
   row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-	row.id = N;
+	row.id = N
   row:SetHeight(rowHeight)
+	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   row:SetPoint("LEFT")
   row:SetPoint("RIGHT", parent, "RIGHT", -16, 0)
-	row:SetScript("OnClick", function()
+	row:SetScript("OnClick", function(self, button)
+		if button == "LeftButton" then
 			o.GUIselect(row.text2:GetText())
-		end);
+		end
+
+		if button == "RightButton" and IsShiftKeyDown() then
+			if mOnWDSave.favoriteInstances[row.text2:GetText()] then
+				mOnWDSave.favoriteInstances[row.text2:GetText()] = nil
+			else
+				mOnWDSave.favoriteInstances[row.text2:GetText()] = true
+			end
+			o.GUIpagingHelper(o.CURRENT_PAGE)
+		end
+
+	end)
+
+	row:SetScript("OnEnter", function()
+			if o.instances[row.text2:GetText()] then
+				local count = 0
+			  for k, v in pairs(o.instances[row.text2:GetText()]['difficulties']) do count = count + 1 end
+			  if count > 1 then
+					GameTooltip_SetDefaultAnchor(GameTooltip, row)
+					GameTooltip:ClearLines()
+					GameTooltip:ClearAllPoints()
+					GameTooltip:SetPoint("BOTTOMLEFT", row, "TOPLEFT")
+					GameTooltip:AddLine(o.strings["Progress"]..":", 0.4, 0.4, 1)
+					for k, v in orderedPairs(o.instances[row.text2:GetText()]['difficulties']) do
+						local total = o.instances[row.text2:GetText()]['difficulties'][k]['total']
+						local collected = o.instances[row.text2:GetText()]['difficulties'][k]['collected']
+						local percent = math.floor((collected / total * 100) + 0.5)
+						if total == 0 or percent > 100 then percent = 100 end
+						GameTooltip:AddDoubleLine(k, mOnWDSave.disableProgress and total or (collected .. " / " .. total) .. " (" .. percent .. "%)")
+					end
+					GameTooltip:Show()
+				end
+			end
+		end)
+
+	row:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
 
 	local c = CreateFrame("StatusBar", nil, row)
 	c:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
@@ -172,34 +219,43 @@ local function CreateTableRow(parent, rowHeight, N)
   c:SetWidth(110 - (2 * 10))
   c:SetJustifyH("LEFT")
   c:SetPoint("LEFT", row, "LEFT", 20, 0)
-	c:SetText('');
+	c:SetText('')
 	local filename, fontHeight, flags = c:GetFont()
 	c:SetFont(filename, fontHeight, "OUTLINE")
-	row.text1 = c;
+	row.text1 = c
 
 	local c = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
   c:SetHeight(rowHeight)
   c:SetWidth(220 - (2 * 10))
   c:SetJustifyH("LEFT")
   c:SetPoint("LEFT", row.text1, "RIGHT", 2 * 10, 0)
-	c:SetText('');
-	row.text2 = c;
+	c:SetText('')
+	row.text2 = c
 
-	local c = row:CreateTexture(nil, "ARTWORK");
+	local c = row:CreateTexture(nil, "ARTWORK")
 	c:SetTexture("Interface\\FriendsFrame\\StatusIcon-DnD")
-	c:SetWidth(16);
-	c:SetHeight(16);
-	c:SetPoint("RIGHT", row.text2, "LEFT", -2,0);
+	c:SetWidth(16)
+	c:SetHeight(16)
+	c:SetPoint("RIGHT", row.text2, "LEFT", -2,0)
 	c:Hide()
-	row.saved = c;
+	row.saved = c
+
+	local c = row:CreateTexture(nil, "ARTWORK")
+	c:SetTexture("Interface\\Common\\ReputationStar")
+	c:SetTexCoord(0, 0.5, 0, 0.5)
+	c:SetWidth(16)
+	c:SetHeight(16)
+	c:SetPoint("RIGHT", row.saved, "LEFT", 2,0)
+	c:Hide()
+	row.star = c
 
 	local c = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
   c:SetHeight(rowHeight)
   c:SetWidth(100)
   c:SetJustifyH("RIGHT")
   c:SetPoint("RIGHT", row, "RIGHT", -10, 0)
-	c:SetText('');
-	row.percent = c;
+	c:SetText('')
+	row.percent = c
 
   return row
 end
@@ -257,6 +313,45 @@ n:SetScript("OnClick", function()
 		end
 	end);
 
+local b = CreateFrame("Button", nil, mOnWD_MainFrame)
+mOnWD_MainFrame.tutorial = b
+b:SetPoint("BOTTOMRIGHT", mOnWD_MainFrame, 0, -6)
+b:SetWidth(40)
+b:SetHeight(40)
+b:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight", "ADD")
+local t = b:CreateTexture(nil, "BACKGROUND")
+t.BG = t
+t:SetTexture("Interface\\common\\help-i")
+t:SetAllPoints(b)
+b:SetScript("OnEnter", function()
+	GameTooltip_SetDefaultAnchor(GameTooltip, b)
+	GameTooltip:ClearLines()
+	GameTooltip:ClearAllPoints()
+	GameTooltip:SetPoint("BOTTOMRIGHT", b, "TOPRIGHT")
+	GameTooltip:AddLine(o.strings["Help"])
+	GameTooltip:AddDoubleLine(o.strings["Left Click"], o.strings["Main LeftClick Help"])
+	GameTooltip:AddDoubleLine(o.strings["Shift"] .. " + " .. o.strings["Right Click"], o.strings["Main Shift RightClick Help"])
+	GameTooltip:Show()
+end)
+b:SetScript("OnLeave", function()
+	GameTooltip:Hide()
+end)
+
+local b = CreateFrame("Button", nil, mOnWD_MainFrame)
+mOnWD_MainFrame.bOptions = b
+b:SetPoint("TOPRIGHT", mOnWD_MainFrame, -30, -2)
+b:SetWidth(20)
+b:SetHeight(20)
+b:SetHighlightTexture("Interface\\Buttons\\UI-OptionsButton", "ADD")
+local t = b:CreateTexture(nil, "BACKGROUND")
+t.BG = t
+t:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+t:SetAllPoints(b)
+b:SetScript("OnClick", function()
+		o.GUIshowOptions()
+	end)
+
+
 StaticPopupDialogs["MONWD_CONFIRMATION"] = {
   text = o.strings["Refresh Confirmation"],
   button1 = o.strings["Yes"],
@@ -284,11 +379,25 @@ local function everythingNeededExists(i)
 		and mOnWD_MainFrame.ListFrame.RowFrame.rows[i].status
 end
 
+local function getSpecialMessage()
+	local weekday, month, day, year = CalendarGetDate()
+	if day == 30 and month == 8 and year == 2016 then
+		return o.strings["Happy Leveling"]
+	elseif day == 29 or day == 15 then
+		return o.strings["You're beautiful"]
+	elseif weekday == 1 then
+		return o.strings["Happy Sunday"]
+	end
+end
+
 o.GUIpagingHelper = function(N)
 	if o.loaded == false then
 		mOnWD_MainFrame.ListFrame.info:Show()
+		mOnWD_MainFrame.ListFrame.specialMessage:Show()
+		mOnWD_MainFrame.ListFrame.specialMessage:SetText(getSpecialMessage())
 	else
 		mOnWD_MainFrame.ListFrame.info:Hide()
+		mOnWD_MainFrame.ListFrame.specialMessage:Hide()
 	end
 
 	local numRows = mOnWD_MainFrame.ListFrame.RowFrame.numRows
@@ -306,62 +415,103 @@ o.GUIpagingHelper = function(N)
 	local FirstN = N - 1
 	for i=1,numRows do
 		if everythingNeededExists(i) then
+			local row = mOnWD_MainFrame.ListFrame.RowFrame.rows[i]
 			if mOnWDSave.disableProgress then
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:Hide();
+				row.percent:Hide()
 			else
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:Show();
+				row.percent:Show()
 			end
 			local index = i+FirstN
 			if o.menuItems[index]~=nil then
 				local item = o.menuItems[index]
 				if item.category then
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i]:Disable();
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetText("");
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:SetText("");
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text2:SetTextColor(1,0.2,0.2,1)
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].saved:Hide()
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].status:Hide()
-				else
-					local total = o.instances[item.name]['#total']
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i]:Enable();
-					if mOnWDSave.disableProgress then
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetText(total);
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].status:SetValue(0)
+					row:Disable()
+					row.text1:SetTextColor(1,0.2,0.2,1)
+					row.text2:SetTextColor(1,0.2,0.2,1)
+					row.percent:SetTextColor(1,0.2,0.2,1)
+					row.saved:Hide()
+					row.star:Hide()
+					if o.tiers[item.name] then
+						local total = 0
+						local t = o.tiers[item.name]
+						for k,v in pairs(t) do
+							for j = 0,#v do
+								if o.instances[v[j]] then total = total + o.instances[v[j]]['total'] end
+							end
+						end
+						if mOnWDSave.disableProgress then
+							row.text1:SetText(total)
+							row.percent:SetText("")
+							row.status:Show()
+							row.status:SetValue(0)
+						else
+							local collected = 0
+							for k,v in pairs(t) do
+								for j = 0,#v do
+									if o.instances[v[j]] then collected = collected + o.instances[v[j]]['collected'] end
+								end
+							end
+							local percent = math.floor((collected / total * 100) + 0.5)
+							if total == 0 or percent > 100 then percent = 100 end
+							row.status:Show()
+							row.status:SetValue(percent)
+							row.percent:SetText(percent .. "%")
+							row.text1:SetText(collected .. " / " .. total)
+						end
 					else
-						local missing = o.instances[item.name]['#collected']
-						local percent = math.floor((missing / total * 100) + 0.5)
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetText(missing .. " / " .. total);
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:SetText(percent .. "%");
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].status:SetValue(percent)
+						row.text1:SetText("")
+						row.percent:SetText("")
+						row.status:Hide()
 					end
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].status:Show()
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetTextColor(1,1,1,1)
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text2:SetTextColor(1,1,1,1)
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:SetTextColor(1,1,1,1)
+				else
+					local total = o.instances[item.name]['total']
+					row:Enable()
+					if mOnWDSave.disableProgress then
+						row.text1:SetText(total)
+						row.status:SetValue(0)
+					else
+						local collected = o.instances[item.name]['collected']
+						local percent = math.floor((collected / total * 100) + 0.5)
+						if total == 0 or percent > 100 then percent = 100 end
+						row.text1:SetText(collected .. " / " .. total)
+						row.percent:SetText(percent .. "%")
+						row.status:SetValue(percent)
+					end
+					row.status:Show()
+					row.text1:SetTextColor(1,1,1,1)
+					row.text2:SetTextColor(1,1,1,1)
+					row.percent:SetTextColor(1,1,1,1)
+					if mOnWDSave.favoriteInstances[item.name] then
+						row.star:Show()
+					else
+						row.star:Hide()
+					end
 					if item.type == "Raid" then
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetTextColor(1,1,0.6,1)
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text2:SetTextColor(1,1,0.6,1)
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:SetTextColor(1,1,0.6,1)
+						row.text1:SetTextColor(1,1,0.6,1)
+						row.text2:SetTextColor(1,1,0.6,1)
+						row.percent:SetTextColor(1,1,0.6,1)
 					elseif item.type == '#done' then
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetTextColor(1,1,1,0.6)
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text2:SetTextColor(1,1,1,0.6)
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:SetTextColor(1,1,1,0.6)
-						mOnWD_MainFrame.ListFrame.RowFrame.rows[i]:Disable();
+						row.text1:SetTextColor(1,1,1,0.6)
+						row.text2:SetTextColor(1,1,1,0.6)
+						row.percent:SetTextColor(1,1,1,0.6)
+						row:Enable()
+						row.star:Hide()
 					end
 				end
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text2:SetText(item.name);
+				row.text2:SetText(item.name)
 				if o.saves[item.name] then
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].saved:Show()
+					row.saved:Show()
 				else
-					mOnWD_MainFrame.ListFrame.RowFrame.rows[i].saved:Hide()
+					row.saved:Hide()
 				end
 			else
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text1:SetText("");
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].text2:SetText("");
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].percent:SetText("");
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i]:Disable();
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].saved:Hide()
-				mOnWD_MainFrame.ListFrame.RowFrame.rows[i].status:Hide()
+				row.text1:SetText("")
+				row.text2:SetText("")
+				row.percent:SetText("")
+				row:Disable()
+				row.saved:Hide()
+				row.star:Hide()
+				row.status:Hide()
 			end
 		end
 	end
@@ -375,56 +525,42 @@ o.GUImainPage = function(N)
 end
 
 o.GUIselect = function(instance)
-	o.GUIshowItems(instance)
+	if mOnWDSave.onlyMiniList then
+		if mOnWDSave.hideList then
+			mOnWD_MainFrame:Hide()
+		end
+		o.GUIopenMiniList(1, instance, '#first')
+	else
+		o.GUIshowItems(instance)
+	end
 end
 
 local function compMenuItemsDefault(a, b)
 	if a.index == b.index then
-		return a.name < b.name
+		return cmpAlphabetical(a.name, b.name)
 	else
 		return a.index < b.index
 	end
 end
 
 o.createMenuItems = function()
+	if o.loaded == false then return end
+
 	o.menuItems = {}
 
 	for i = 1,#o.EXPS do
-		local tmp = {}
-		tmp.name = o.EXPS[i]
-		tmp.category = true
-		tmp.index = i
-		table.insert(o.menuItems, tmp)
-		local tmp = {}
-		tmp.name = ""
-		tmp.category = true
-		tmp.index = i + 0.9
-		table.insert(o.menuItems, tmp)
+		table.insert(o.menuItems, {name = o.EXPS[i], category = true, index = i})
+		table.insert(o.menuItems, {name = "", category = true, index = i + 0.9})
 	end
 
-	local i = #o.EXPS + 1
-	local tmp = {}
-	tmp.name = "Special"
-	tmp.category = true
-	tmp.index = i
-	table.insert(o.menuItems, tmp)
-	local tmp = {}
-	tmp.name = ""
-	tmp.category = true
-	tmp.index = i + 0.9
-	table.insert(o.menuItems, tmp)
+	table.insert(o.menuItems, {name = "Special", category = true, index = #o.EXPS + 1})
+	table.insert(o.menuItems, {name = "", category = true, index = #o.EXPS + 1 + 0.9})
 
-	local i = #o.EXPS + 2
-	local tmp = {}
-	tmp.name = "Unknown"
-	tmp.category = true
-	tmp.index = i
-	table.insert(o.menuItems, tmp)
-	local tmp = {}
-	tmp.name = ""
-	tmp.category = true
-	tmp.index = i + 0.9
-	table.insert(o.menuItems, tmp)
+	table.insert(o.menuItems, {name = "Custom Categories", category = true, index = #o.EXPS + 2})
+	table.insert(o.menuItems, {name = "", category = true, index = #o.EXPS + 2 + 0.9})
+
+	table.insert(o.menuItems, {name = "Unknown", category = true, index = #o.EXPS + 3})
+	table.insert(o.menuItems, {name = "", category = true, index = #o.EXPS + 3 + 0.9})
 
 	for k, v in orderedPairs(o.instances) do
 		local tmp = {}
@@ -433,25 +569,34 @@ o.createMenuItems = function()
 		if o.categorization[k] then
 			tmp.type = o.PARTY[o.categorization[k][2]]
 			type = o.categorization[k][2]
-			if(v['#collected'] >= v['#total']) then
+			if(v['collected'] >= v['total']) then
 				tmp.type = "#done"
 				type = 3
 			end
 			tmp.index = o.categorization[k][1] + (type / 10)
 		elseif o.SPECIAL[k] then
-			if(v['#collected'] >= v['#total']) then
+			if(v['collected'] >= v['total']) then
 				tmp.type = "#done"
 				type = 3
 			end
 			tmp.index = (#o.EXPS + 1) + (type / 10)
+		elseif o.customCategories[k] then
+			if(v['collected'] >= v['total']) then
+				tmp.type = "#done"
+				type = 3
+			end
+			tmp.index = (#o.EXPS + 2) + (type / 10)
 		else
-			if(v['#collected'] >= v['#total']) then
+			if(v['collected'] >= v['total']) then
 				tmp.type = "#done"
 				type = 3
 			end
-			tmp.index = (#o.EXPS + 1) + (type / 10)
+			tmp.index = (#o.EXPS + 3) + (type / 10)
 		end
-		table.insert(o.menuItems, tmp)
+		if tmp.type == '#done' and mOnWDSave.hideCompletedInstances then
+		else
+			table.insert(o.menuItems, tmp)
+		end
 	end
 
 	table.sort(o.menuItems, compMenuItemsDefault)
