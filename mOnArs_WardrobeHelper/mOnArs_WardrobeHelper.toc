@@ -1,9 +1,9 @@
-## Interface:  70000
+## Interface:  80350
 ## Title: mOnAr's WardrobeHelper
-## Version: 1.16.2
-## Author: Seamoon/mOnAr
+## Version: 1.19
+## Author: mOnAr
 ## Notes:
-## SavedVariables: mOnWDSave
+## SavedVariables: mOnWDSave, mOnWDCache
 ## SavedVariablesPerCharacter:
 
 libs\LibDBIcon-1.0\embeds.xml
@@ -14,15 +14,9 @@ Functions.lua
 
 Init.lua
 
-localization\Categorization.en.lua
-localization\Categorization.fr.lua
-localization\Categorization.de.lua
-localization\Categorization.ru.lua
-localization\Categorization.pt.lua
-localization\Categorization.es.lua
-localization\Categorization.cn.lua
-localization\Categorization.tw.lua
+Categorization.lua
 
+localization\_Localization.global.lua
 localization\Localization.en.lua
 localization\Localization.ru.lua
 localization\Localization.pt.lua
@@ -53,6 +47,7 @@ customCategories\Tier18.lua
 customCategories\Season1.lua
 
 additionalInstanceData\additionalData.lua
+additionalInstanceData\idCache.lua
 
 Blacklist.lua
 
