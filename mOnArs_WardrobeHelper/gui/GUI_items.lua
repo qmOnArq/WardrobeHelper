@@ -148,7 +148,7 @@ o.refreshItemContent = function()
 	textWidthTester:SetText(longestName)
 
 	if(textWidthTester:GetStringWidth()	+ (leftBuffer_bossName * 2) > mOnWD_MainFrame.ItemFrame:GetWidth()) then
-		mOnWD_MainFrame.ItemFrame:SetWidth((string.len(longestName) * 10) + leftBuffer_bossName * 2)
+		mOnWD_MainFrame.ItemFrame:SetWidth(textWidthTester:GetStringWidth() + (leftBuffer_bossName * 2))
 	end
 
 	local maxItemsPerRow = math.floor((mOnWD_MainFrame.ItemFrame:GetWidth() - (leftBuffer_item*2)) / itemIconSize) 
