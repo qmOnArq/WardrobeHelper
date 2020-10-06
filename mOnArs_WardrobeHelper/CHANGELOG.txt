@@ -1,6 +1,6 @@
 ﻿== 1.19 ==
- * update TOC for 8.3.5
- * add VoA and BH PVP
+ * updated TOC
+ * resizable instance detail (by sloerlein/treebaconing)
 
 == 1.18.6 ==
  * update categorization method (thanks to hizuro_de)

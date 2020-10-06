@@ -27,29 +27,6 @@ local HOLDABLE = "INVTYPE_HOLDABLE"
 local TABARD = "INVTYPE_TABARD"
 local BAG = "INVTYPE_BAG"
 
-local inventorySlotsMap = {
-  [HEAD] = {1},
-  [SHOULDER] = {3},
-  [BODY] = {4},
-  [CHEST] = {5},
-  [ROBE] = {5},
-  [WAIST] = {6},
-  [LEGS] = {7},
-  [FEET] = {8},
-  [WRIST] = {9},
-  [HAND] = {10},
-  [CLOAK] = {15},
-  [WEAPON] = {16, 17},
-  [SHIELD] = {17},
-  [WEAPON_2HAND] = {16, 17},
-  [WEAPON_MAIN_HAND] = {16},
-  [RANGED] = {16},
-  [RANGED_RIGHT] = {16},
-  [WEAPON_OFF_HAND] = {17},
-  [HOLDABLE] = {17},
-  [TABARD] = {19},
-}
-
 local MISC = 0
 local CLOTH = 1
 local LEATHER = 2
@@ -109,9 +86,7 @@ o.isArmorSubClassID = function(subClassID, itemLink)
   return select(1, GetItemSubClassInfo(4, subClassID)) == itemSubClass
 end
 
-o.isArmorAppropriateForPlayer = function(itemID, linkDifficulty)
-  local itemLink = o.createLink(itemID, linkDifficulty)
-
+o.isArmorAppropriateForPlayer = function(itemLink)
   local playerArmorTypeID = o.getPlayerArmorTypeName()
   local slotName = o.getItemSlotName(itemLink)
   if slotName == nil then
@@ -128,48 +103,22 @@ o.isArmorAppropriateForPlayer = function(itemID, linkDifficulty)
   end
 end
 
-o.getSourceID = function(itemID, linkDifficulty)
-  local itemLink = o.createLink(itemID, linkDifficulty)
-  local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
-
-  if (sourceID ~= nil) then
-    return sourceID
-  end
-
-  local _, _, _, slotName = GetItemInfoInstant(itemLink)
-  local slots = inventorySlotsMap[slotName]
-
+o.getSourceID = function(itemLink)
   DressUpModel:SetUnit("player")
   DressUpModel:Undress()
   DressUpModel:TryOn(itemLink)
-  for _, slot in pairs(slots) do
-    sourceID = DressUpModel:GetSlotTransmogSources(slot)
+  for i = 1, 18 do
+    local sourceID = DressUpModel:GetSlotTransmogSources(i)
     if sourceID and sourceID ~= 0 then
       return sourceID
     end
   end
 end
 
-o.getAppearanceID = function(itemID, linkDifficulty)
-  local cacheString = itemID
-  if linkDifficulty ~= nil then cacheString = cacheString .. "-" .. linkDifficulty end
-
-  if mOnWDCache ~= nil and mOnWDCache.appearanceID ~= nil and mOnWDCache.appearanceID[cacheString] ~= nil then
-    return mOnWDCache.appearanceID[cacheString]
-  end
-
-  local itemLink = o.createLink(itemID, linkDifficulty)
-  local appID, _ = C_TransmogCollection.GetItemInfo(itemLink)
-
-  if (appID ~= nil) then
-    mOnWDCache.appearanceID[cacheString] = appID
-    return appID
-  end
-
-  local source = o.getSourceID(itemID, linkDifficulty)
+o.getAppearanceID = function(itemLink)
+  local source = o.getSourceID(itemLink)
   if source then
     local _, appearanceID = C_TransmogCollection.GetAppearanceSourceInfo(source)
-    mOnWDCache.appearanceID[cacheString] = appearanceID
     return appearanceID
   end
 end
@@ -208,8 +157,9 @@ o.addAdditionalData = function(instances, useCoroutine)
           for source, itemIDs in pairs(diffData.items) do
             for i = 1, #itemIDs do
               local itemID = itemIDs[i]
-              local appearanceID = o.getAppearanceID(itemID, diffData.linkDifficulty)
-              if appearanceID and o.isArmorAppropriateForPlayer(itemID, diffData.linkDifficulty) then
+              local itemLink = o.createLink(itemID, diffData.linkDifficulty)
+              local appearanceID = o.getAppearanceID(itemLink)
+              if appearanceID and o.isArmorAppropriateForPlayer(itemLink) then
                 local sources = C_TransmogCollection.GetAppearanceSources(appearanceID)
                 if sources then
                   local collected = o.isCollected(sources) and (mOnWDSave.completionistMode == false)
@@ -253,7 +203,7 @@ o.addAdditionalData = function(instances, useCoroutine)
                       table.insert(
                         instances[instanceName]["difficulties"][foundDiff]["bosses"][source]["items"],
                         {
-                          link = o.createLink(itemID, diffData.linkDifficulty),
+                          link = itemLink,
                           id = itemID,
                           visualID = appearanceID,
                           sourceID = sources[1].sourceID

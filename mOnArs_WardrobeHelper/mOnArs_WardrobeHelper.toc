@@ -3,7 +3,7 @@
 ## Version: 1.19
 ## Author: mOnAr
 ## Notes:
-## SavedVariables: mOnWDSave, mOnWDCache
+## SavedVariables: mOnWDSave
 ## SavedVariablesPerCharacter:
 
 libs\LibDBIcon-1.0\embeds.xml
@@ -47,7 +47,6 @@ customCategories\Tier18.lua
 customCategories\Season1.lua
 
 additionalInstanceData\additionalData.lua
-additionalInstanceData\idCache.lua
 
 Blacklist.lua
 
