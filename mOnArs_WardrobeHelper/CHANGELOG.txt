@@ -1,4 +1,8 @@
-﻿== 1.19 ==
+﻿== 1.20 ==
+ * updated TOC
+ * fixes for 9.0
+
+== 1.19 ==
  * updated TOC
  * resizable instance detail (by sloerlein/treebaconing)
 

@@ -282,7 +282,7 @@ end
 --  Create UI
 ---------------------------------------------------------------
 
-local ff = CreateFrame("Frame", nil, f)
+local ff = CreateFrame("Frame", nil, f, "BackdropTemplate")
 f.ItemFrame = ff
 ff:Hide()
 ff:SetWidth(532)
@@ -306,6 +306,7 @@ ff.HeaderTexture = h
 ff.title = ff:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 ff.title:SetPoint("TOP", h, "TOP", 0, -15)
 ff.title:SetText("")
+
 ff:SetBackdrop(
 	{
 		bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
